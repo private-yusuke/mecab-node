@@ -40,7 +40,6 @@ class MeCab {
       }
     }
   }
-  /*
   format (array) {
     const ress = []
     if (!array) return ress
@@ -49,7 +48,7 @@ class MeCab {
       if (res) ress.push(res)
     })
     return ress
-  } */
+  }
   /**
    * そのままでは扱いづらい MeCab コマンドの出力を配列にします。
    * @param {string} str MeCab コマンドの出力
