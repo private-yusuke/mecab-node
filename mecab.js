@@ -68,7 +68,7 @@ class MeCab {
    * @param {string} strin MeCab コマンドで形態素解析させる文章
    */
   getCommandString (strin) {
-    return `${sq.quote(['echo', strin])} | ${this.command}${this.commandOptions ? ' ' + this.commandOptions : ''}`
+    return `${this.command}${this.commandOptions ? ' ' + this.commandOptions : ''}`
   }
   /**
    * 形態素解析を非同期でします。
@@ -78,13 +78,24 @@ class MeCab {
   async parse (strin) {
     let command = this.getCommandString(strin)
     // console.log(command)
-    await process.nextTick()
-    try {
-      let res = await childProcess.exec(command, this.execOptions)
-      return this.parseMeCabResult(res).slice(0, -2)
-    } catch (e) {
-      throw e
-    }
+
+    return new Promise((resolve, reject) => {
+      let child = childProcess.execFile(command, this.execOptions)
+      let result = ''
+    
+      child.stdout.on('data', data => {
+        result += data.toString()
+      })
+      child.on('close', code => {
+        resolve(this.parseMeCabResult(result).slice(0, -2))
+      })
+      child.on('error', err => {
+        reject(err)
+      })
+
+      child.stdin.write(strin + '\n')
+      child.stdin.end()
+    })
   }
   /**
    * 形態素解析を同期でします。
