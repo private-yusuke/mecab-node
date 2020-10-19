@@ -1,5 +1,4 @@
 const childProcess = require('child_process')
-const sq = require('shell-quote')
 
 /**
  * @class MeCab
@@ -71,60 +70,25 @@ class MeCab {
     return `${this.command}${this.commandOptions ? ' ' + this.commandOptions : ''}`
   }
   /**
-   * 形態素解析を非同期でします。
-   * @throws childProcess で実行されている MeCab コマンドが失敗したとき、childProcessで発生する例外
-   * @param {string} strin MeCab コマンドで形態素解析させる文章
-   */
-  async parse (strin) {
-    let command = this.getCommandString(strin)
-    // console.log(command)
-
-    return new Promise((resolve, reject) => {
-      let child = childProcess.execFile(command, this.execOptions)
-      let result = ''
-    
-      child.stdout.on('data', data => {
-        result += data.toString()
-      })
-      child.on('close', code => {
-        resolve(this.parseMeCabResult(result).slice(0, -2))
-      })
-      child.on('error', err => {
-        reject(err)
-      })
-
-      child.stdin.write(strin + '\n')
-      child.stdin.end()
-    })
-  }
-  /**
    * 形態素解析を同期でします。
    * @param {string} strin MeCab コマンドで形態素解析させる文章
    */
   parseSync (strin) {
-    const res = childProcess.execSync(this.getCommandString(strin), this.execOptions)
+    const res = childProcess.execSync(this.getCommandString(), {
+      input: strin,
+      ...this.execOptions
+    })
     return this.parseMeCabResult(String(res)).slice(0, -2)
-  }
-  /**
-   * 分かち書きを非同期でします。
-   * @throws childProcess で実行されている MeCab コマンドが失敗したとき、childProcessで発生する例外
-   * @param {string} strin MeCab コマンドで分かち書きさせる文章
-   */
-  async wakachi (strin) {
-    let command = this.getCommandString(strin) + ' -Owakati'
-    try {
-      let res = await childProcess.exec(command, this.execOptions)
-      return res.split(' ').split('\n')
-    } catch (e) {
-      throw e
-    }
   }
   /**
    * 分かち書きを同期でします。
    * @param {string} strin MeCab コマンドで分かち書きさせる文章
    */
   wakachiSync (strin) {
-    const res = childProcess.execSync(this.getCommandString(strin) + ' -Owakati', this.execOptions)
+    const res = childProcess.execSync(this.getCommandString() + ' -Owakati', {
+      input: strin,
+      ...this.execOptions
+    })
     let tmp = String(res).split('\n')
     return tmp.map(i => i.split(' '))
   }
